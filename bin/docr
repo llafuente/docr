@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+
+'use strict';
+
+process.title = 'docr';
+
+
+var docr = require("../index.js"),
+    glob = require("glob");
+
+var gfiles = process.argv.slice(2),
+    files = [];
+
+//console.log("files: ", gfiles);
+
+gfiles.forEach(function(pattern) {
+  files = files.concat(glob.sync(pattern));
+});
+
+files.forEach(function(file) {
+    console.log(file);
+    docr.readFile(file);
+});
+
+console.log(docr.generate());

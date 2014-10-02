@@ -1,0 +1,35 @@
+{
+  "name": "docr",
+  "version": "0.0.1",
+  "description": "Small documentation (markdown) util",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/llafuente/docr"
+  },
+  "keywords": [
+    "documentation",
+    "markdown"
+  ],
+  "bin": {
+    "docr": "bin/docr"
+  },
+  "author": {
+    "name": "Luis Lafuente",
+    "email": "llafuente@noboxout.com",
+    "url": "http://www.noboxout.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/llafuente/docr/issues"
+  },
+  "homepage": "https://github.com/llafuente/docr",
+  "dependencies": {
+    "doctrine": "^0.5.2",
+    "glob": "^4.0.6",
+    "esprima-ast-utils": "0.0.4"
+  }
+}
