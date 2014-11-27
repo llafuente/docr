@@ -6,20 +6,35 @@ process.title = 'docr';
 
 
 var docr = require("../index.js"),
-    glob = require("glob");
+    glob = require("glob"),
+    fs = require("fs"),
+    path = require("path"),
+    argv = require('yargs').argv;
 
-var gfiles = process.argv.slice(2),
+var gfiles = argv._,
     files = [];
 
 //console.log("files: ", gfiles);
 
+
 gfiles.forEach(function(pattern) {
-  files = files.concat(glob.sync(pattern));
+  files = files.concat(glob.sync(path.join(process.env.PWD, pattern)));
 });
 
 files.forEach(function(file) {
     console.log(file);
-    docr.readFile(file);
+    docr.readFile(file, argv);
 });
 
-console.log(docr.generate());
+console.log(docr.generate(/^_/));
+
+if (argv.append) {
+    argv.append = !Array.isArray(argv.append) ? [argv.append] : argv.append;
+
+    argv.append.forEach(function(file) {
+        console.log(fs.readFileSync(file, "UTF-8"));
+        console.log();
+    });
+
+
+}

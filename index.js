@@ -9,7 +9,8 @@ var fs = require("fs"),
     path = require("path"),
     utils = require("esprima-ast-utils"),
     doctrine = require("doctrine"),
-    methods = {};
+    methods = {},
+    intros = {};
 
 function getNearestFunction(node) {
     // search nearest function
@@ -83,14 +84,34 @@ function getDoctrineParam(doctrine, param_name) {
     return null;
 }
 
-function readFile(file) {
+function readFile(file, options) {
+    options = options || {};
+    options.intro = options.intro || false;
+    options.level = options.level || 0;
+
     methods[file] = {};
+    intros[file] = null;
 
     //var tree = utils.parseFile(path.join("lib", file));
     var tree = utils.parseFile(file);
 
     utils.traverse(tree, function(node) {
         if (node.type === "Block") {
+            console.log(node.range);
+            if (options.intro && node.range[0] === 0) {
+                intros[file] = node.value.split("\n").map(function(line) {
+                    console.log(line);
+
+                    var cut = line.indexOf("*");
+                    if (cut !== -1) {
+                        line = line.substring(cut + 1).trim();
+                    }
+
+                    return line;
+                }).join("\n");
+                return;
+            }
+
             var fn  = getNearestFunction(node);
             if (fn) {
                 methods[file][fn.id.name] = {
@@ -99,12 +120,16 @@ function readFile(file) {
                         lineNumbers: true,
                         sloppy: true
                     }),
-                    arguments: utils.getArgumentList(fn)
+                    arguments: utils.getArgumentList(fn) || []
                 };
             }
         }
 
     });
+}
+
+function isOptional(expr) {
+    return expr.type === 'OptionalType';
 }
 
 function doctrineExpressionToText(expr) {
@@ -114,7 +139,7 @@ function doctrineExpressionToText(expr) {
     case 'NameExpression':
         return expr.name;
     case 'OptionalType':
-        return '[' + expr.expression.name + ']';
+        return expr.expression.name;
     case 'UnionType':
         return expr.elements.map(function(t) {
             return doctrineExpressionToText(t);
@@ -125,26 +150,36 @@ function doctrineExpressionToText(expr) {
     }
 }
 
-function generate() {
+function generate(ignore_pattern) {
     var docs = [];
 
     Object.keys(methods).forEach(function(file) {
-        docs.push('### ' + path.basename(file).split(".")[0]);
+        if (intros[file]) {
+            docs.push(intros[file]);
+        } else {
+            docs.push('#### ' + path.basename(file).split(".")[0]);
+        }
         docs.push('');
         docs.push('');
 
         Object.keys(methods[file]).forEach(function(fun_name) {
+            if (fun_name.match(ignore_pattern)) {
+                return;
+            }
+
             var doctrine = methods[file][fun_name].doctrine,
                 args = methods[file][fun_name].arguments.map(function(name) {
                     var p = getDoctrineParam(doctrine, name);
                     if (p && p.type) {
-                        return doctrineExpressionToText(p.type) + ":" + name;
+                        var txt = doctrineExpressionToText(p.type) + ":" + name;
+
+                        return isOptional(p.type) ? "[" + txt + "]" : txt;
                     }
                     console.error("(wrn) " + file + ":" + fun_name + " argument not documented: " + name);
                     return name;
                 });
 
-            docs.push('#### `' + fun_name + "` (" + args.join(", ") + ")");
+            docs.push('##### `' + fun_name + "` (" + args.join(", ") + ")");
 
             docs.push('');
 
