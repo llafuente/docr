@@ -59,6 +59,21 @@ function power(a, b) {
 
 `docr` will generate documentation for any function that has a *doc-block*. To be coherent function name must be the same as exports.
 
-# examples
+# jsDoc support.
+
+* description
+* @param
+* @note
+* @return
+* @example (partial support)
+
+new
+
+* @name String
+
+  Force the function name in the documentation.
+
+# projects that use docr
 
 * [esprima-ast-utils](https://github.com/llafuente/esprima-ast-utils)
+* [mongoose-versioner](https://github.com/llafuente/mongoose-versioner)

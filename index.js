@@ -59,6 +59,20 @@ function getDoctrineParams(doctrine) {
     return list.length ? list : null;
 }
 
+function getDoctrineName(doctrine) {
+    var i = 0,
+        max = doctrine.tags.length,
+        list = [];
+    for (i = 0; i < max; ++i) {
+        if (doctrine.tags[i].title === 'name') {
+            return doctrine.tags[i].name;
+        }
+    }
+
+    return null;
+}
+
+
 
 function getDoctrineExample(doctrine) {
     var i = 0,
@@ -82,6 +96,24 @@ function getDoctrineParam(doctrine, param_name) {
     }
 
     return null;
+}
+
+function getDoctrineReturn(doctrine) {
+    var i = 0,
+        max = doctrine.tags.length;
+    for (i = 0; i < max; ++i) {
+        if (doctrine.tags[i].title === 'return') {
+            return doctrine.tags[i];
+        }
+    }
+
+    return null;
+}
+
+function getReturned(doctrine) {
+    var rtn = getDoctrineReturn(doctrine);
+
+    return rtn ? (" -> " + doctrineExpressionToText(rtn.type)) : "";
 }
 
 function readFile(file, options) {
@@ -165,55 +197,81 @@ function generate(ignore_pattern) {
             }
 
             var doctrine = methods[file][fun_name].doctrine,
-                args = methods[file][fun_name].arguments.map(function(name) {
-                    var p = getDoctrineParam(doctrine, name);
-                    if (p && p.type) {
-                        var txt = doctrineExpressionToText(p.type) + ":" + name;
+                args = "";
 
-                        return isOptional(p.type) ? "[" + txt + "]" : txt;
+            methods[file][fun_name].arguments.forEach(function(name) {
+                var p = getDoctrineParam(doctrine, name);
+                if (p && p.type) {
+                    var txt = doctrineExpressionToText(p.type) + ":" + name;
+
+                    if (isOptional(p.type)) {
+
+                        args += (args.length === 0 ? "[ " : " [, ") + txt + "]";
+                        return;
                     }
-                    console.error("(wrn) " + file + ":" + fun_name + " argument not documented: " + name);
-                    return name;
-                });
 
-            docs.push('##### `' + fun_name + "` (" + args.join(", ") + ")");
+
+                    args += (args.length === 0 ? "" : ", ") + txt;
+                    return;
+                }
+                console.error("(wrn) " + file + ":" + fun_name + " argument not documented: " + name);
+                args += (args.length === 0 ? "" : ", ") + name;
+            });
+
+            docs.push('##### `' + (getDoctrineName(doctrine) || fun_name) + "` (" + args + ")" + getReturned(doctrine));
 
             docs.push('');
 
             if (doctrine.description) {
-                docs.push(doctrine.description.trim().split("\n").join("\n\n"));
+                docs.push(doctrine.description.trim());
             }
+            docs.push('');
 
             var params = getDoctrineParams(doctrine);
 
             if (params) {
+                docs.push('*Parameters:*');
+                docs.push('');
                 params.forEach(function(param) {
                     if (param.description) {
-                        docs.push('');
                         docs.push("* `" + param.name + "`: " + param.description);
+                    } else {
+                        docs.push("* `" + param.name + "`");
                     }
+                    docs.push('');
                 });
+                docs.push('');
             }
+
+            var rtn = getDoctrineReturn(doctrine);
+            if (rtn) {
+                docs.push('*Returns:*');
+                docs.push('');
+                docs.push("* `" + doctrineExpressionToText(rtn.type) + "`" + (rtn.description ? (": " + rtn.description) : ""));
+                docs.push('');
+
+            }
+
 
             var notes = getDoctrineNotes(doctrine);
             if (notes) {
                 notes.forEach(function(note) {
+                    docs.push("*Note*: " + note.description);
                     docs.push('');
-                    docs.push("**Note**: " + note.description);
                 });
             }
 
             var example = getDoctrineExample(doctrine);
             if (example) {
-                docs.push('');
-                docs.push('Example:');
+                docs.push('*Example*:');
                 docs.push('```js');
                 docs.push(example.description);
                 docs.push('```');
+                docs.push('');
             }
 
             docs.push('');
-            docs.push('');
+            docs.push('<br /><br />');
             docs.push('');
 
         });
