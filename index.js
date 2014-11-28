@@ -97,11 +97,8 @@ function readFile(file, options) {
 
     utils.traverse(tree, function(node) {
         if (node.type === "Block") {
-            console.log(node.range);
             if (options.intro && node.range[0] === 0) {
                 intros[file] = node.value.split("\n").map(function(line) {
-                    console.log(line);
-
                     var cut = line.indexOf("*");
                     if (cut !== -1) {
                         line = line.substring(cut + 1).trim();

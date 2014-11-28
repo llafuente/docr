@@ -8,10 +8,11 @@ Small javascript to markdown documentation tool
 ```bash
 npm install -g docr
 
-docr file|pattern [ file|pattern] [--append file] [--intro]
+docr file|pattern [ file|pattern] [--prepend file] [--append file] [--intro]
   pattern    Linux will expand wildcards so remember to escape
              them "\*"
-  append     can be repeated
+  prepend    can be repeated many times
+  append     can be repeated many times
   intro      if the file has an intro (comment at the very
              beginning of the file) it will be used
 ```

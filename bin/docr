@@ -22,9 +22,18 @@ gfiles.forEach(function(pattern) {
 });
 
 files.forEach(function(file) {
-    console.log(file);
+    console.error(file);
     docr.readFile(file, argv);
 });
+
+if (argv.prepend) {
+    argv.prepend = !Array.isArray(argv.prepend) ? [argv.prepend] : argv.prepend;
+
+    argv.prepend.forEach(function(file) {
+        console.log(fs.readFileSync(file, "UTF-8"));
+        console.log();
+    });
+}
 
 console.log(docr.generate(/^_/));
 
@@ -35,6 +44,4 @@ if (argv.append) {
         console.log(fs.readFileSync(file, "UTF-8"));
         console.log();
     });
-
-
 }
