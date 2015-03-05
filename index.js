@@ -127,13 +127,23 @@ function readFile(file, options) {
     //var tree = utils.parseFile(path.join("lib", file));
     var tree = utils.parseFile(file);
 
+    var md_code_block = false; // trim or not?
     utils.traverse(tree, function(node) {
         if (node.type === "Block") {
             if (options.intro && node.range[0] === 0) {
                 intros[file] = node.value.split("\n").map(function(line) {
                     var cut = line.indexOf("*");
+                    var block = line.indexOf("```");
                     if (cut !== -1) {
-                        line = line.substring(cut + 1).trim();
+                        line = line.substring(cut + 1);
+                    }
+                    if (!md_code_block) {
+                      line = line.trim();
+                    }
+
+                    if (block !== -1) {
+                      line = line.trim();
+                      md_code_block = !md_code_block;
                     }
 
                     return line;
@@ -280,5 +290,3 @@ function generate(ignore_pattern) {
 
     return docs.join("\n");
 }
-
-
